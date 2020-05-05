@@ -1,0 +1,16 @@
+---
+version: '3'
+
+services:
+  minimal-dev:
+    container_name: minimal-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dceoy/minimal-dev:latest
+    entrypoint:
+      - /usr/bin/bash
+      - -c
+    command:
+      - /tmp/minimal-dev/setup_minimal_dev.sh
+      - --debug
