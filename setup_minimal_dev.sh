@@ -88,7 +88,7 @@ apt-get -y update \
 apt-file update;
 locale-gen en_US.UTF-8 && update-locale;
 
-[[ $(grep -ce ${ZSH}) -eq 0 ]] && tee ${ZSH} | tee -a /etc/shells;
+[[ $(grep -ce ${ZSH} /etc/shells) -eq 0 ]] && tee ${ZSH} | tee -a /etc/shells;
 chsh $(whoami) -s ${ZSH};
 
 curl -L https://bootstrap.pypa.io/get-pip.py | ${PYTHON};
