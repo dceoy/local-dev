@@ -20,5 +20,5 @@ Docker image
 Pull the image from [Docker Hub](https://hub.docker.com/r/dceoy/minimal-dev/).
 
 ```sh
-$ docker pull dceoy/minimal-dev
+$ docker image pull dceoy/minimal-dev
 ```

@@ -77,10 +77,9 @@ apt-get -y update \
     libluajit-5.1-dev libncurses5-dev locales lua5.1 luajit mercurial nkf \
     nmap npm p7zip-full pandoc pbzip2 pigz pkg-config python3-dev \
     python3-distutils r-base rake rename ruby shellcheck \
-    software-properties-common sqlite3 ssh sshfs sudo supervisor \
-    systemd-timesyncd texlive-fonts-recommended texlive-plain-generic \
-    texlive-xetex time tmux traceroute tree unzip wakeonlan wget whois zip \
-    zsh \
+    software-properties-common sqlite3 ssh sshfs supervisor systemd-timesyncd \
+    texlive-fonts-recommended texlive-plain-generic texlive-xetex time tmux \
+    traceroute tree unzip wakeonlan wget whois zip zsh \
   && apt-get -y autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*;
@@ -95,7 +94,7 @@ curl -L https://bootstrap.pypa.io/get-pip.py | ${PYTHON};
 /usr/local/bin/pip install -U pip;
 EOF
 
-sudo bash -x /tmp/sudo_install.sh
+sudo -E bash -x /tmp/sudo_install.sh
 rm -f /tmp/sudo_install.sh
 
 set -x
