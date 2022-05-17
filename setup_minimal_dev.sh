@@ -73,7 +73,7 @@ apt-get -y update \
   && apt-get -y dist-upgrade \
   && apt-get -y install --no-install-recommends --no-install-suggests \
     apt-transport-https apt-file apt-utils aptitude build-essential \
-    cifs-utils colordiff corkscrew curl docker.io htop git gnupg golang \
+    cifs-utils colordiff corkscrew curl htop git gnupg golang \
     libluajit-5.1-dev libncurses5-dev locales lua5.1 luajit mercurial nkf \
     nmap npm p7zip-full pandoc pbzip2 pigz pkg-config python3-dev \
     python3-distutils r-base rake rename ruby shellcheck \
@@ -102,8 +102,7 @@ set -x
 cd "${HOME}"
 
 export PATH="${HOME}/.local/bin:${PATH}"
-/usr/local/bin/pip install -U --no-cache-dir --user pip
-pip install -U --no-cache-dir \
+/usr/local/bin/pip install -U --no-cache-dir --user \
   ansible ansible-lint autopep8 bash_kernel csvkit cython docker-compose \
   docopt flake8 flake8-bugbear flake8-isort ggplot grip jupyter \
   jupyter_contrib_nbextensions jupyterthemes matplotlib pandas \
