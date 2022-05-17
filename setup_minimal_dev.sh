@@ -103,11 +103,11 @@ cd "${HOME}"
 
 export PATH="${HOME}/.local/bin:${PATH}"
 /usr/local/bin/pip install -U --no-cache-dir --user \
-  ansible ansible-lint autopep8 bash_kernel csvkit cython docker-compose \
+  ansible-lint autopep8 bash_kernel csvkit cython docker-compose \
   docopt flake8 flake8-bugbear flake8-isort ggplot grip jupyter \
   jupyter_contrib_nbextensions jupyterthemes matplotlib pandas \
   pep8-naming pip psutil pynvim scikit-learn scipy seaborn sklearn-pandas \
-  statsmodels tqdm vim-vint vulture yamllint
+  statsmodels tqdm vim-vint vulture yamllint # ansible
 
 curl -L \
   https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/vim/files/vimrc \
