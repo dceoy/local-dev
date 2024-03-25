@@ -14,6 +14,7 @@ services:
     # platform: linux/arm64
     volumes:
       - ${PWD}:/wd
+      - ${HOME}/.gitconfig:/root/.gitconfig:ro
     working_dir: /wd
     environment:
       - /usr/local/bin/entrypoint.sh

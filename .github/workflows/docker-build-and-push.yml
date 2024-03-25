@@ -1,6 +1,9 @@
 ---
 name: CI to GitHub Container Registry
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       platforms:
@@ -13,7 +16,7 @@ jobs:
     with:
       registry: ghcr.io
       image-name: ${{ github.repository }}
-      platforms: ${{ inputs.platforms }}
+      platforms: ${{ inputs.platforms || 'linux/arm64' }}
       context: .
       file: ./Dockerfile
       push: true
