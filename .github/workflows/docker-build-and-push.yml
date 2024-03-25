@@ -1,0 +1,22 @@
+---
+name: CI to GitHub Container Registry
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Target platforms for build
+        required: false
+        default: linux/arm64
+jobs:
+  docker-build-and-push:
+    uses: dceoy/gh-actions-for-devops/.github/workflows/docker-build-and-push.yml@main
+    with:
+      registry: ghcr.io
+      image-name: ${{ github.repository }}
+      platforms: ${{ inputs.platforms }}
+      context: .
+      file: ./Dockerfile
+      push: true
+    secrets:
+      DOCKER_USER: ${{ github.actor }}
+      DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}

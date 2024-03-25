@@ -1,24 +1,15 @@
-minimal-dev
-===========
+local-dev
+=========
 
-Provisioning script for minimal development environment
+Dockerfile for a local development environment
 
-Supported OS: Ubuntu &ge;20.04
+[![CI](https://github.com/dceoy/local-dev/actions/workflows/docker-build-and-push.yml/badge.svg)](https://github.com/dceoy/local-dev/actions/workflows/docker-build-and-push.yml)
 
-Usage
------
-
-Set up a development environment
-
-```sh
-$ sudo --validate   # validate sudo command
-$ curl -L https://raw.githubusercontent.com/dceoy/minimal-dev/setup_minimal_dev.sh | bash
-```
 Docker image
 -------------
 
-Pull the image from [Docker Hub](https://hub.docker.com/r/dceoy/minimal-dev/).
+Pull the image from [GitHub Container Registry](https://github.com/dceoy/local-dev/pkgs/container/local-dev).
 
 ```sh
-$ docker image pull dceoy/minimal-dev
+$ docker image pull ghcr.io/dceoy/local-dev:latest
 ```
