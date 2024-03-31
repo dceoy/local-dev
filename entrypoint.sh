@@ -2,4 +2,5 @@
 
 set -euox pipefail
 
+git config --global safe.directory "${PWD}"
 exec "${@}"
