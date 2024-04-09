@@ -17,6 +17,8 @@ services:
       - ${HOME}/.gitconfig:/root/.gitconfig:ro
     working_dir: /wd
     environment:
+      TZ: Asia/Tokyo
+    entrypoint:
       - /usr/local/bin/entrypoint.sh
     command:
       - /usr/bin/zsh
