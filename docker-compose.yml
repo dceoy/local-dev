@@ -1,6 +1,4 @@
 ---
-version: '3'
-
 services:
   local-dev:
     container_name: local-dev
