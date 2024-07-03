@@ -9,10 +9,12 @@ services:
         - linux/amd64
         - linux/arm64
     image: ghcr.io/dceoy/local-dev:latest
-    # platform: linux/arm64
+    platform: linux/arm64
     volumes:
       - ${PWD}:/wd
       - ${HOME}/.gitconfig:/root/.gitconfig:ro
+      - ${HOME}/.aws:/root/.aws:ro
+      - /var/run/docker.sock:/var/run/docker-host.sock
     working_dir: /wd
     environment:
       TZ: Asia/Tokyo

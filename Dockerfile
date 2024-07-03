@@ -15,7 +15,7 @@ RUN set -e \
         file g++ git gnupg golang htop libncurses5-dev locales lua5.4 luajit nkf \
         nmap npm p7zip-full pandoc pbzip2 pigz pkg-config procps python3-dev \
         python3-distutils r-base rake rename ruby shellcheck \
-        software-properties-common sqlite3 ssh sshfs systemd-timesyncd \
+        software-properties-common sqlite3 ssh sshfs sudo systemd-timesyncd \
         texlive-fonts-recommended texlive-plain-generic texlive-xetex time \
         tmux traceroute tree unzip wakeonlan wget whois zip zsh \
       && apt-get -y autoremove \
@@ -78,6 +78,11 @@ RUN set -e \
 RUN set -e \
       && /tmp/install_latest_vim.sh --lua --dein /usr/local \
       && rm -f /tmp/install_latest_vim.sh
+
+ADD https://get.docker.com /tmp/install-docker.sh
+RUN set -e \
+      && bash /tmp/install-docker.sh \
+      && rm -f /tmp/install-docker.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/zsh", "-l"]
