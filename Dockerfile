@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/ubuntu:24.04
+FROM public.ecr.aws/docker/library/ubuntu:24.10
 
 ARG USER=dev
 ARG UID=1001
