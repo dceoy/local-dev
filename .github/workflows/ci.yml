@@ -1,5 +1,5 @@
 ---
-name: CI to GitHub Container Registry
+name: CI/CD
 on:
   push:
     branches:
@@ -10,11 +10,22 @@ jobs:
     uses: dceoy/gh-actions-for-devops/.github/workflows/docker-build-and-push.yml@main
     with:
       registry: ghcr.io
+      registry-user: ${{ github.actor }}
       image-name: ${{ github.repository }}
       platforms: linux/amd64,linux/arm64
       context: .
       file: ./Dockerfile
       push: true
+      scan-after-build: false
     secrets:
-      DOCKER_USER: ${{ github.actor }}
+      DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  docker-image-scan:
+    needs:
+      - docker-build-and-push
+    uses: dceoy/gh-actions-for-devops/.github/workflows/docker-image-scan.yml@main
+    with:
+      image-refs: >
+        ["${{ fromJson(needs.docker-build-and-push.outputs.metadata-json).tags[0] }}"]
+      registry: ghcr.io
+    secrets:
       DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
