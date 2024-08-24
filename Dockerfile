@@ -48,7 +48,8 @@ RUN \
         python3-dev python3-pip python3-venv r-base rake rename ruby \
         shellcheck software-properties-common sqlite3 ssh systemd-timesyncd \
         texlive-fonts-recommended texlive-plain-generic texlive-xetex time \
-        tmux traceroute tree unzip vim-gtk3 wakeonlan wget whois zip
+        tmux traceroute tree unzip vim-gtk3 wakeonlan wget whois x11-apps \
+        xauth zip
 
 RUN \
       --mount=type=cache,target=/root/.cache \
@@ -153,7 +154,7 @@ RUN \
       && git config --global push.default matching
 
 RUN \
-      /opt/vim/dein-installer.sh --use-vim-config \
+      /opt/vim/dein-installer.sh --use-vim-config "${HOME}/.vim" \
       && /usr/local/bin/vim-plugin-update
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
