@@ -14,8 +14,14 @@ Pull the image from [GitHub Container Registry](https://github.com/dceoy/local-d
 $ docker image pull ghcr.io/dceoy/local-dev:latest
 ```
 
-Run Zsh in the container.
+Run the container.
 
 ```sh
 $ docker container run --rm -it -v "${PWD}:/wd" -w /wd ghcr.io/dceoy/local-dev:latest
+```
+
+Run the container using Docker Compose.
+
+```sh
+$ docker compose run --rm local-dev
 ```

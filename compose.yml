@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: cli
       # platforms:
       #   - linux/arm64
       #   - linux/amd64
@@ -15,6 +16,7 @@ services:
       - ${HOME}/.gitconfig:/root/.gitconfig:ro
       - ${HOME}/.aws:/root/.aws:ro
       - /var/run/docker.sock:/var/run/docker-host.sock
+      - /etc/localtime:/etc/localtime:ro
     working_dir: /wd
     environment:
       TZ: Asia/Tokyo

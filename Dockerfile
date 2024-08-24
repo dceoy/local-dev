@@ -137,6 +137,8 @@ RUN \
 
 HEALTHCHECK NONE
 
+FROM base AS cli
+
 USER "${USER}"
 WORKDIR "/home/${USER}"
 
