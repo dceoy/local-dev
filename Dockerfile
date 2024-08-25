@@ -111,12 +111,14 @@ RUN \
       && update-locale
 
 RUN \
-      mkdir -p /opt/dotfiles \
-      && echo '.DS_Store' > /opt/dotfiles/gitignore \
-      && curl -sSL -o /opt/dotfiles/vimrc \
-        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/vim/files/vimrc \
-      && curl -sSL -o /opt/dotfiles/zshrc \
-        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/cli/files/zshrc
+      git config --system color.ui auto \
+      && git config --system core.editor vim \
+      && git config --system core.excludesfile /opt/dotfiles/gitignore \
+      && git config --system core.precomposeunicode false \
+      && git config --system core.quotepath false \
+      && git config --system gui.encoding utf-8 \
+      && git config --system pull.rebase true \
+      && git config --system push.default matching
 
 RUN \
       --mount=type=cache,target=/root/.cache \
@@ -132,6 +134,18 @@ RUN \
       && chmod +x /usr/local/bin/vim-plugin-update
 
 RUN \
+      mkdir -p /opt/dotfiles \
+      && echo '.DS_Store' > /opt/dotfiles/gitignore \
+      && curl -sSL -o /opt/dotfiles/vimrc \
+        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/vim/files/vimrc \
+      && curl -sSL -o /opt/dotfiles/zshrc \
+        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/cli/files/zshrc \
+      && cp -a /opt/dotfiles/gitignore "${HOME}/.gitignore" \
+      && cp -a /opt/dotfiles/vimrc "${HOME}/.vimrc" \
+      && cp -a /opt/dotfiles/zshrc "${HOME}/.zshrc" \
+      && chown -R "${USER}:${USER}" /home/"${USER}"
+
+RUN \
       --mount=type=bind,source=.,target=/mnt/host \
       cp /mnt/host/entrypoint.sh /usr/local/bin/entrypoint.sh \
       && chmod +x /usr/local/bin/entrypoint.sh
@@ -142,16 +156,6 @@ FROM base AS cli
 
 USER "${USER}"
 WORKDIR "/home/${USER}"
-
-RUN \
-      ln -s /opt/dotfiles/gitignore "${HOME}/.gitignore" \
-      && ln -s /opt/dotfiles/vimrc "${HOME}/.vimrc" \
-      && ln -s /opt/dotfiles/zshrc "${HOME}/.zshrc" \
-      && git config --global core.editor vim \
-      && git config --global core.excludesfile "${HOME}/.gitignore" \
-      && git config --global color.ui auto \
-      && git config --global pull.rebase true \
-      && git config --global push.default matching
 
 RUN \
       /opt/vim/dein-installer.sh --use-vim-config "${HOME}/.vim" \

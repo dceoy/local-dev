@@ -9,5 +9,4 @@ if [[ -f "${HOST_DOCKER_SOCK_PATH}" ]]; then
     "UNIX-CONNECT:${HOST_DOCKER_SOCK_PATH}" &
 fi
 
-git config --global safe.directory "${PWD}"
 exec "${@}"
