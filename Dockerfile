@@ -140,10 +140,10 @@ RUN \
         https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/vim/files/vimrc \
       && curl -sSL -o /opt/dotfiles/zshrc \
         https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/cli/files/zshrc \
-      && cp -a /opt/dotfiles/gitignore "${HOME}/.gitignore" \
-      && cp -a /opt/dotfiles/vimrc "${HOME}/.vimrc" \
-      && cp -a /opt/dotfiles/zshrc "${HOME}/.zshrc" \
-      && chown -R "${USER}:${USER}" /home/"${USER}"
+      && cp -a /opt/dotfiles/gitignore "/home/${USER}/.gitignore" \
+      && cp -a /opt/dotfiles/vimrc "/home/${USER}/.vimrc" \
+      && cp -a /opt/dotfiles/zshrc "/home/${USER}/.zshrc" \
+      && chown -R "${USER}:${USER}" "/home/${USER}"
 
 RUN \
       --mount=type=bind,source=.,target=/mnt/host \
