@@ -43,8 +43,8 @@ RUN \
       && apt-get -y install --no-install-recommends --no-install-suggests \
         ansible apt-transport-https apt-file apt-utils aptitude aria2 \
         build-essential ca-certificates cifs-utils colordiff corkscrew curl \
-        file g++ git gnupg golang htop libncurses5-dev locales lua5.4 luajit \
-        nkf nmap npm p7zip-full pandoc pbzip2 pigz pkg-config procps \
+        fd-find file g++ git gnupg golang htop libncurses5-dev locales lua5.4 \
+        luajit nkf nmap npm p7zip-full pandoc pbzip2 pigz pkg-config procps \
         python3-dev python3-pip python3-venv r-base rake rename ruby \
         shellcheck software-properties-common sqlite3 ssh systemd-timesyncd \
         texlive-fonts-recommended texlive-plain-generic texlive-xetex time \

@@ -16,8 +16,7 @@ services:
     network_mode: host
     volumes:
       - ${PWD}:/mnt/host
-      - ${HOME}/.aws:/home/dev/.aws:ro
-      - ${HOME}/.ssh:/home/dev/.ssh:ro
+      - ${HOME}:/home/dev
       - /var/run/docker.sock:/var/run/docker-host.sock
       - /etc/localtime:/etc/localtime:ro
     working_dir: /mnt/host
