@@ -1,66 +1,75 @@
 # syntax=docker/dockerfile:1
 ARG UBUNTU_VERSION=24.04
-FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS base
+FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS builder
 
-ARG USER=dev
-ARG UID=1001
-ARG GID=1001
+ARG PYTHON_VERSION=3.13
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONIOENCODING=utf-8
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
+ENV POETRY_HOME=/opt/poetry
+ENV POETRY_VIRTUALENVS_CREATE=false
+ENV POETRY_NO_INTERACTION=true
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONIOENCODING=UTF-8
-ENV PIP_NO_CACHE_DIR=off
-ENV PIP_DISABLE_PIP_VERSION_CHECK=on
-ENV PATH="/opt/tfenv/bin:${PATH}"
 
 RUN \
       rm -f /etc/apt/apt.conf.d/docker-clean \
       && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
         > /etc/apt/apt.conf.d/keep-cache
 
+# hadolint ignore=DL3008
+RUN \
+      --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
+      && apt-get -y install --no-install-recommends --no-install-suggests \
+        ca-certificates curl gnupg lsb-release software-properties-common \
+      && add-apt-repository ppa:deadsnakes/ppa
+
+RUN \
+      curl -fSL https://apt.releases.hashicorp.com/gpg \
+        | gpg --dearmor \
+        | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+      && gpg --no-default-keyring \
+        --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+        --fingerprint \
+      && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+        | tee /etc/apt/sources.list.d/hashicorp.list
+
+# hadolint ignore=SC1091
+RUN \
+      install -m 0755 -d /etc/apt/keyrings \
+      && curl -fSL -o /etc/apt/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg \
+      && chmod a+r /etc/apt/keyrings/docker.asc \
+      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
+        | tee /etc/apt/sources.list.d/docker.list
+
+# hadolint ignore=DL3008
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
       apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        sudo zsh
-
-RUN \
-      groupadd -g "${GID}" "${USER}" \
-      && useradd -u "${UID}" -g "${GID}" -s /usr/bin/zsh -m "${USER}" \
-      && echo "${USER} ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/${USER}" \
-      && chmod 0440 "/etc/sudoers.d/${USER}"
-
-RUN \
-      --mount=type=cache,target=/var/cache/apt,sharing=locked \
-      --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      apt-get -y update \
-      && apt-get -y upgrade \
-      && apt-get -y install --no-install-recommends --no-install-suggests \
-        ansible apt-transport-https apt-file apt-utils aptitude aria2 \
-        build-essential ca-certificates cifs-utils colordiff corkscrew curl \
-        fd-find file g++ git gnupg golang htop libncurses5-dev locales lua5.4 \
-        luajit nkf nmap npm p7zip-full pandoc pbzip2 pigz pkg-config procps \
-        python3-dev python3-pip python3-venv r-base rake rename ruby \
-        shellcheck software-properties-common sqlite3 ssh systemd-timesyncd \
-        texlive-fonts-recommended texlive-plain-generic texlive-xetex time \
-        tmux traceroute tree unzip vim-gtk3 wakeonlan wget whois x11-apps \
-        xauth zip
+        curl docker-ce docker-ce-cli containerd.io docker-buildx-plugin \
+        docker-compose-plugin gcc git libc6-dev libncurses-dev make \
+        "python${PYTHON_VERSION}-dev" terraform unzip
 
 RUN \
       --mount=type=cache,target=/root/.cache \
-      ln -s python3 /usr/bin/python \
-      && /usr/bin/python3 -m venv /opt/venv \
-      && /opt/venv/bin/pip install -U pip setuptools wheel \
-      && /opt/venv/bin/pip install -U \
-        ansible-lint autopep8 bandit black csvkit docopt flake8 \
-        flake8-bugbear flake8-isort ipython pandas mypy pep8-naming poetry \
-        polars psutil pydantic pynvim pyright ruff scikit-learn scipy seaborn \
-        statsmodels tqdm vim-vint vulture yamllint
+      ln -s "python${PYTHON_VERSION}" /usr/bin/python \
+      && curl -fSL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
+      && /usr/bin/python /tmp/get-pip.py \
+      && /usr/bin/python -m pip install -U --prefix=/usr/local pip setuptools wheel \
+      && /usr/bin/python -m pip install -U --prefix=/usr/local \
+        ansible-lint autopep8 csvkit docopt ipython pandas pipx poetry polars \
+        psutil pydantic pynvim pyright ruff scikit-learn scipy seaborn \
+        statsmodels tqdm typer uv vim-vint vulture yamllint \
+      && rm -f /tmp/get-pip.py
 
 RUN \
       --mount=type=cache,target=/root/.cache \
@@ -82,15 +91,6 @@ RUN \
         /usr/local/bin/print-github-tags
 
 RUN \
-      --mount=type=cache,target=/root/.cache \
-      print-github-tags --debug --release --latest --tar tfutils/tfenv \
-        | xargs -t curl -sSL -o /tmp/tfenv.tar.gz \
-      && tar xvf /tmp/tfenv.tar.gz -C /opt/ \
-      && mv /opt/tfenv-* /opt/tfenv \
-      && /opt/tfenv/bin/tfenv install latest \
-      && /opt/tfenv/bin/tfenv use latest
-
-RUN \
       print-github-tags --release --latest gruntwork-io/terragrunt \
         | xargs -I{} -t curl -sSL -o /usr/local/bin/terragrunt \
           "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_64$/amd64/')" \
@@ -98,10 +98,65 @@ RUN \
 
 RUN \
       --mount=type=cache,target=/root/.cache \
-      curl -sSL -o /tmp/install-docker.sh https://get.docker.com \
-      && bash /tmp/install-docker.sh \
-      && usermod -aG docker "${USER}" \
-      && rm -f /tmp/install-docker.sh
+      curl -fSL -o /usr/local/bin/install_latest_vim.sh \
+        https://raw.githubusercontent.com/dceoy/install-latest-vim/refs/heads/master/install_latest_vim.sh \
+      && curl -fSL -o /usr/local/bin/update_vim_plugins.sh \
+        https://raw.githubusercontent.com/dceoy/install-latest-vim/refs/heads/master/update_vim_plugins.sh \
+      && chmod +x /usr/local/bin/install_latest_vim.sh /usr/local/bin/update_vim_plugins.sh \
+      && /usr/local/bin/install_latest_vim.sh --lua --python3="/usr/bin/python${PYTHON_VERSION}" --vim-plug /usr/local
+
+RUN \
+      --mount=type=bind,source=.,target=/mnt/host \
+      cp /mnt/host/entrypoint.sh /usr/local/bin/entrypoint.sh \
+      && chmod +x /usr/local/bin/entrypoint.sh
+
+
+FROM public.ecr.aws/docker/library/ubuntu:${UBUNTU_VERSION} AS cli
+
+ARG PYTHON_VERSION=3.13
+ARG USER_NAME=cli
+ARG USER_UID=1001
+ARG USER_GID=1001
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /etc/apt/apt.conf.d/keep-cache /etc/apt/apt.conf.d/keep-cache
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONIOENCODING=utf-8
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+RUN \
+      ln -s "python${PYTHON_VERSION}" /usr/bin/python \
+      && rm -f /etc/apt/apt.conf.d/docker-clean
+
+# hadolint ignore=DL3008
+RUN \
+      --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
+      && apt-get -y install --no-install-recommends --no-install-suggests \
+        gnupg software-properties-common \
+      && add-apt-repository ppa:deadsnakes/ppa
+
+COPY --from=builder /etc/apt/sources.list.d/hashicorp.list /etc/apt/sources.list.d/hashicorp.list
+COPY --from=builder /usr/share/keyrings/hashicorp-archive-keyring.gpg /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+# hadolint ignore=DL3008
+RUN \
+      --mount=type=cache,target=/var/cache/apt,sharing=locked \
+      --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      apt-get -y update \
+      && apt-get -y upgrade \
+      && apt-get -y install --no-install-recommends --no-install-suggests \
+        apt-transport-https apt-file apt-utils aptitude aria2 build-essential \
+        ca-certificates cifs-utils colordiff corkscrew curl fd-find file git \
+        golang htop locales nkf nmap npm p7zip-full pandoc pbzip2 pigz \
+        "python${PYTHON_VERSION}-dev" r-base rake rename ruby shellcheck ssh \
+        sudo systemd-timesyncd terraform time tmux traceroute tree unzip \
+        wakeonlan wget whois zip zsh
 
 RUN \
       apt-file update
@@ -111,55 +166,44 @@ RUN \
       && update-locale
 
 RUN \
-      git config --system color.ui auto \
-      && git config --system core.editor vim \
-      && git config --system core.excludesfile /opt/dotfiles/gitignore \
-      && git config --system core.precomposeunicode false \
-      && git config --system core.quotepath false \
-      && git config --system gui.encoding utf-8 \
-      && git config --system pull.rebase true \
-      && git config --system push.default matching
+      groupadd --gid "${USER_GID}" "${USER_NAME}" \
+      && useradd --uid "${USER_UID}" --gid "${USER_GID}" --shell /usr/bin/zsh --create-home "${USER_NAME}" \
+      && echo "${USER_NAME} ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/${USER_NAME}" \
+      && chmod 0440 "/etc/sudoers.d/${USER_NAME}"
+
+USER ${USER_NAME}
+WORKDIR /home/${USER_NAME}
 
 RUN \
-      --mount=type=cache,target=/root/.cache \
-      mkdir -p /opt/vim \
-      && curl -sSL -o /opt/vim/dein-installer.sh \
-        https://raw.githubusercontent.com/Shougo/dein-installer.vim/master/installer.sh \
-      && chmod +x /opt/vim/dein-installer.sh \
-      && { \
-        echo '#!/usr/bin/env bash'; \
-        echo 'set -euox pipefail'; \
-        echo "vim -N -u ~/.vimrc -U NONE -i NONE -V1 -e -s -c 'try | call dein#update() | finally | qall! | endtry'"; \
-      } > /usr/local/bin/vim-plugin-update \
-      && chmod +x /usr/local/bin/vim-plugin-update
+      curl -fSL -o /tmp/install-ohmyzsh.sh \
+        https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
+      && chmod +x /tmp/install-ohmyzsh.sh \
+      && /tmp/install-ohmyzsh.sh --unattended \
+      && rm -f /tmp/install-ohmyzsh.sh
 
 RUN \
-      mkdir -p /opt/dotfiles \
-      && echo '.DS_Store' > /opt/dotfiles/gitignore \
-      && curl -sSL -o /opt/dotfiles/vimrc \
-        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/vim/files/vimrc \
-      && curl -sSL -o /opt/dotfiles/zshrc \
-        https://raw.githubusercontent.com/dceoy/ansible-dev/master/roles/cli/files/zshrc \
-      && cp -a /opt/dotfiles/gitignore "/home/${USER}/.gitignore" \
-      && cp -a /opt/dotfiles/vimrc "/home/${USER}/.vimrc" \
-      && cp -a /opt/dotfiles/zshrc "/home/${USER}/.zshrc" \
-      && chown -R "${USER}:${USER}" "/home/${USER}"
+      curl -fSL -o "${HOME}/.oh-my-zsh/custom/themes/dceoy.zsh-theme" \
+        https://raw.githubusercontent.com/dceoy/ansible-dev-server/refs/heads/master/roles/cli/files/dceoy.zsh-theme \
+      && sed -ie 's/^ZSH_THEME=.*/ZSH_THEME="dceoy"/' "${HOME}/.zshrc"
+
 
 RUN \
-      --mount=type=bind,source=.,target=/mnt/host \
-      cp /mnt/host/entrypoint.sh /usr/local/bin/entrypoint.sh \
-      && chmod +x /usr/local/bin/entrypoint.sh
+      curl -fSL -o "${HOME}/.vimrc" \
+        https://raw.githubusercontent.com/dceoy/ansible-dev-server/refs/heads/master/roles/vim/files/vimrc \
+      && /usr/local/bin/update_vim_plugins.sh
+
+RUN \
+      git config --global color.ui auto \
+      && git config --global core.editor vim \
+      && git config --global core.excludesfile "${HOME}/.gitignore" \
+      && git config --global core.precomposeunicode false \
+      && git config --global core.quotepath false \
+      && git config --global gui.encoding utf-8 \
+      && git config --global pull.rebase true \
+      && git config --global push.default matching \
+      && echo '.DS_Store' > "${HOME}/.gitignore"
 
 HEALTHCHECK NONE
-
-FROM base AS cli
-
-USER "${USER}"
-WORKDIR "/home/${USER}"
-
-RUN \
-      /opt/vim/dein-installer.sh --use-vim-config "${HOME}/.vim" \
-      && /usr/local/bin/vim-plugin-update
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/zsh", "-l"]

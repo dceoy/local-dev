@@ -6,23 +6,30 @@ services:
       context: .
       dockerfile: Dockerfile
       target: cli
+      # platforms:
+      #   - linux/arm64
+      #   - linux/amd64
       args:
-        USER: dev
-        UID: '1001'
-        GID: '1001'
+        UBUNTU_VERSION: '24.04'
+        PYTHON_VERSION: '3.13'
+        USER_NAME: cli
+        USER_UID: 1001
+        USER_GID: 1001
+      cache_from:
+        - type=gha
+      cache_to:
+        - type=gha,mode=max
     image: ghcr.io/dceoy/local-dev:latest
     userns_mode: host
-    user: 1001:1001
     network_mode: host
     volumes:
       - ${PWD}:/mnt/host
-      - ${HOME}:/home/dev
       - /var/run/docker.sock:/var/run/docker-host.sock
       - /etc/localtime:/etc/localtime:ro
     working_dir: /mnt/host
     environment:
       TZ: Asia/Tokyo
-      LANG: ja_JP.UTF-8
+      LANG: en_US.UTF-8
     entrypoint:
       - /usr/local/bin/entrypoint.sh
     command:
