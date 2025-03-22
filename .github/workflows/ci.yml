@@ -47,7 +47,7 @@ jobs:
       file: ./Dockerfile
       platforms: linux/amd64,linux/arm64
       push: true
-      scan-before-build: false
-      scan-after-build: true
+      scan-before-build: true
+      scan-after-build: false
     secrets:
       DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
