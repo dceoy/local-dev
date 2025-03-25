@@ -31,7 +31,7 @@ RUN \
       && add-apt-repository ppa:deadsnakes/ppa
 
 RUN \
-      curl -fSL https://apt.releases.hashicorp.com/gpg \
+      curl -fsSL https://apt.releases.hashicorp.com/gpg \
         | gpg --dearmor \
         | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg \
       && gpg --no-default-keyring \
@@ -43,7 +43,7 @@ RUN \
 # hadolint ignore=SC1091
 RUN \
       install -m 0755 -d /etc/apt/keyrings \
-      && curl -fSL -o /etc/apt/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg \
+      && curl -fsSL -o /etc/apt/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg \
       && chmod a+r /etc/apt/keyrings/docker.asc \
       && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
         | tee /etc/apt/sources.list.d/docker.list
@@ -62,7 +62,7 @@ RUN \
 RUN \
       --mount=type=cache,target=/root/.cache \
       ln -s "python${PYTHON_VERSION}" /usr/bin/python \
-      && curl -fSL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
+      && curl -fsSL -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
       && /usr/bin/python /tmp/get-pip.py \
       && /usr/bin/python -m pip install -U --prefix=/usr/local pip setuptools wheel \
       && /usr/bin/python -m pip install -U --prefix=/usr/local \
@@ -73,18 +73,18 @@ RUN \
 
 RUN \
       --mount=type=cache,target=/root/.cache \
-      curl -sSL -o /tmp/awscliv2.zip \
+      curl -fsSL -o /tmp/awscliv2.zip \
         "https://awscli.amazonaws.com/awscli-exe-linux-$([ "$(uname -m)" = 'x86_64' ] && echo 'x86_64' || echo 'aarch64').zip" \
       && unzip /tmp/awscliv2.zip -d /tmp \
       && /tmp/aws/install \
       && rm -rf /tmp/awscliv2.zip /tmp/aws
 
 RUN \
-      curl -sSL -o /usr/local/bin/git-rewind-days \
+      curl -fsSL -o /usr/local/bin/git-rewind-days \
         https://raw.githubusercontent.com/dceoy/git-rewind-days/master/git-rewind-days \
-      && curl -sSL -o /usr/local/bin/git-rewind-hours \
+      && curl -fsSL -o /usr/local/bin/git-rewind-hours \
         https://raw.githubusercontent.com/dceoy/git-rewind-days/master/git-rewind-hours \
-      && curl -sSL -o /usr/local/bin/print-github-tags \
+      && curl -fsSL -o /usr/local/bin/print-github-tags \
         https://raw.githubusercontent.com/dceoy/print-github-tags/master/print-github-tags \
       && chmod +x \
         /usr/local/bin/git-rewind-days /usr/local/bin/git-rewind-hours \
@@ -92,15 +92,15 @@ RUN \
 
 RUN \
       print-github-tags --release --latest gruntwork-io/terragrunt \
-        | xargs -I{} -t curl -sSL -o /usr/local/bin/terragrunt \
+        | xargs -I{} -t curl -fsSL -o /usr/local/bin/terragrunt \
           "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_64$/amd64/')" \
       && chmod +x /usr/local/bin/terragrunt
 
 RUN \
       --mount=type=cache,target=/root/.cache \
-      curl -fSL -o /usr/local/bin/install_latest_vim.sh \
+      curl -fsSL -o /usr/local/bin/install_latest_vim.sh \
         https://raw.githubusercontent.com/dceoy/install-latest-vim/refs/heads/master/install_latest_vim.sh \
-      && curl -fSL -o /usr/local/bin/update_vim_plugins.sh \
+      && curl -fsSL -o /usr/local/bin/update_vim_plugins.sh \
         https://raw.githubusercontent.com/dceoy/install-latest-vim/refs/heads/master/update_vim_plugins.sh \
       && chmod +x /usr/local/bin/install_latest_vim.sh /usr/local/bin/update_vim_plugins.sh \
       && /usr/local/bin/install_latest_vim.sh --lua --python3="/usr/bin/python${PYTHON_VERSION}" --vim-plug /usr/local
@@ -175,20 +175,20 @@ USER ${USER_NAME}
 WORKDIR /home/${USER_NAME}
 
 RUN \
-      curl -fSL -o /tmp/install-ohmyzsh.sh \
+      curl -fsSL -o /tmp/install-ohmyzsh.sh \
         https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
       && chmod +x /tmp/install-ohmyzsh.sh \
       && /tmp/install-ohmyzsh.sh --unattended \
       && rm -f /tmp/install-ohmyzsh.sh
 
 RUN \
-      curl -fSL -o "${HOME}/.oh-my-zsh/custom/themes/dceoy.zsh-theme" \
+      curl -fsSL -o "${HOME}/.oh-my-zsh/custom/themes/dceoy.zsh-theme" \
         https://raw.githubusercontent.com/dceoy/ansible-dev-server/refs/heads/master/roles/cli/files/dceoy.zsh-theme \
       && sed -ie 's/^ZSH_THEME=.*/ZSH_THEME="dceoy"/' "${HOME}/.zshrc"
 
 
 RUN \
-      curl -fSL -o "${HOME}/.vimrc" \
+      curl -fsSL -o "${HOME}/.vimrc" \
         https://raw.githubusercontent.com/dceoy/ansible-dev-server/refs/heads/master/roles/vim/files/vimrc \
       && /usr/local/bin/update_vim_plugins.sh
 
