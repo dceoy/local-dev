@@ -25,8 +25,8 @@ RUN \
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      apt-get -y update \
-      && apt-get -y install --no-install-recommends --no-install-suggests \
+      apt-get -qy update \
+      && apt-get -qy install --no-install-recommends --no-install-suggests \
         ca-certificates curl gnupg lsb-release software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
@@ -58,9 +58,9 @@ RUN \
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      apt-get -y update \
-      && apt-get -y upgrade \
-      && apt-get -y install --no-install-recommends --no-install-suggests \
+      apt-get -qy update \
+      && apt-get -qy upgrade \
+      && apt-get -qy install --no-install-recommends --no-install-suggests \
         curl containerd.io docker-ce docker-ce-cli docker-buildx-plugin \
         docker-compose-plugin gcc gh git libc6-dev libncurses-dev make \
         "python${PYTHON_VERSION}-dev" terraform unzip
@@ -99,7 +99,7 @@ RUN \
 RUN \
       print-github-tags --release --latest gruntwork-io/terragrunt \
         | xargs -I{} -t curl -fsSL -o /usr/local/bin/terragrunt \
-          "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_$/amd/; s/^aarch/arm/;')" \
+          "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_/amd/; s/^aarch/arm/;')" \
       && chmod +x /usr/local/bin/terragrunt
 
 RUN \
@@ -142,8 +142,8 @@ RUN \
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      apt-get -y update \
-      && apt-get -y install --no-install-recommends --no-install-suggests \
+      apt-get -qy update \
+      && apt-get -qy install --no-install-recommends --no-install-suggests \
         gnupg software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
@@ -158,9 +158,9 @@ COPY --from=builder /etc/apt/sources.list.d/docker.list /etc/apt/sources.list.d/
 RUN \
       --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      apt-get -y update \
-      && apt-get -y upgrade \
-      && apt-get -y install --no-install-recommends --no-install-suggests \
+      apt-get -qy update \
+      && apt-get -qy upgrade \
+      && apt-get -qy install --no-install-recommends --no-install-suggests \
         apt-transport-https apt-file apt-utils aptitude aria2 build-essential \
         ca-certificates cifs-utils colordiff containerd.io corkscrew curl docker-ce \
         docker-ce-cli docker-buildx-plugin docker-compose-plugin fd-find file gh git \
