@@ -40,12 +40,18 @@ RUN \
       && echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
         | tee /etc/apt/sources.list.d/hashicorp.list
 
+RUN \
+      curl -fsSL -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+        https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+        | tee /etc/apt/sources.list.d/github-cli.list
+
 # hadolint ignore=SC1091
 RUN \
-      install -m 0755 -d /etc/apt/keyrings \
-      && curl -fsSL -o /etc/apt/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg \
-      && chmod a+r /etc/apt/keyrings/docker.asc \
-      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
+      curl -fsSL -o /usr/share/keyrings/docker.asc https://download.docker.com/linux/ubuntu/gpg \
+      && chmod a+r /usr/share/keyrings/docker.asc \
+      && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" \
         | tee /etc/apt/sources.list.d/docker.list
 
 # hadolint ignore=DL3008
@@ -55,8 +61,8 @@ RUN \
       apt-get -y update \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
-        curl docker-ce docker-ce-cli containerd.io docker-buildx-plugin \
-        docker-compose-plugin gcc git libc6-dev libncurses-dev make \
+        curl containerd.io docker-ce docker-ce-cli docker-buildx-plugin \
+        docker-compose-plugin gcc gh git libc6-dev libncurses-dev make \
         "python${PYTHON_VERSION}-dev" terraform unzip
 
 RUN \
@@ -93,7 +99,7 @@ RUN \
 RUN \
       print-github-tags --release --latest gruntwork-io/terragrunt \
         | xargs -I{} -t curl -fsSL -o /usr/local/bin/terragrunt \
-          "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_64$/amd64/')" \
+          "https://github.com/gruntwork-io/terragrunt/releases/download/{}/terragrunt_linux_$(uname -m | sed 's/^x86_$/amd/; s/^aarch/arm/;')" \
       && chmod +x /usr/local/bin/terragrunt
 
 RUN \
@@ -141,8 +147,12 @@ RUN \
         gnupg software-properties-common \
       && add-apt-repository ppa:deadsnakes/ppa
 
-COPY --from=builder /etc/apt/sources.list.d/hashicorp.list /etc/apt/sources.list.d/hashicorp.list
 COPY --from=builder /usr/share/keyrings/hashicorp-archive-keyring.gpg /usr/share/keyrings/hashicorp-archive-keyring.gpg
+COPY --from=builder /usr/share/keyrings/githubcli-archive-keyring.gpg /usr/share/keyrings/githubcli-archive-keyring.gpg
+COPY --from=builder /usr/share/keyrings/docker.asc /usr/share/keyrings/docker.asc
+COPY --from=builder /etc/apt/sources.list.d/hashicorp.list /etc/apt/sources.list.d/hashicorp.list
+COPY --from=builder /etc/apt/sources.list.d/github-cli.list /etc/apt/sources.list.d/github-cli.list
+COPY --from=builder /etc/apt/sources.list.d/docker.list /etc/apt/sources.list.d/docker.list
 
 # hadolint ignore=DL3008
 RUN \
@@ -152,7 +162,8 @@ RUN \
       && apt-get -y upgrade \
       && apt-get -y install --no-install-recommends --no-install-suggests \
         apt-transport-https apt-file apt-utils aptitude aria2 build-essential \
-        ca-certificates cifs-utils colordiff corkscrew curl fd-find file git \
+        ca-certificates cifs-utils colordiff containerd.io corkscrew curl docker-ce \
+        docker-ce-cli docker-buildx-plugin docker-compose-plugin fd-find file gh git \
         golang htop locales nkf nmap npm p7zip-full pandoc pbzip2 pigz \
         "python${PYTHON_VERSION}-dev" r-base rake rename ruby shellcheck ssh \
         sudo systemd-timesyncd terraform time tmux traceroute tree unzip \
